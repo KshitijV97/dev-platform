@@ -15,18 +15,54 @@ One Oracle Cloud Always Free `VM.Standard.A1.Flex` (2 OCPU / 12 GB) in Toronto o
 - ADR-0003: static sites go to Cloudflare Pages.
 - ADR-0004: single-host Docker Compose, no orchestration.
 - ADR-0005: GitHub Issues + Projects is the tracker; FOSS is a preference and the escape hatch is mandatory.
+- ADR-0006: `ca-toronto-1` is the home region.
+- ADR-0007: Postgres 16 in Docker, with a portability exit to managed Postgres.
+- ADR-0008: Ofelia runs scheduled jobs; a Postgres queue drives triggered jobs.
+- ADR-0009: external-first observability; no alerting path terminates on the box it monitors.
+- ADR-0010: `.env` on the host plus GitHub Actions secrets, with the password manager as the source of truth.
+- ADR-0011: one Compose project per client site, capped at 2–3 per host.
+- ADR-0012: Cloudflare proxied A record with an Origin Certificate and Full (strict).
+
+## Question status
+
+| Question | Status | Where |
+|---|---|---|
+| Q1 region | Resolved 2026-11-22 | ADR-0006 |
+| Q1b capacity / PAYG | **Open** | below |
+| Q2 database | Resolved 2026-11-22 | ADR-0007 |
+| Q3 scheduler | Resolved 2026-11-22 | ADR-0008 |
+| Q4 queue | Open | round 2 |
+| Q5 observability | Resolved 2026-11-22 | ADR-0009 |
+| Q6 deploy and rollback | Open | round 2 |
+| Q7 secrets | Resolved 2026-11-22 | ADR-0010 |
+| Q8 staging | Open | round 2 |
+| Q9 client isolation | Resolved 2026-11-22 | ADR-0011 |
+| Q10 ingress | Resolved 2026-11-22 | ADR-0012 |
+| Q11 backup policy | Open | round 2 |
+| Q12 move-off triggers | Open | round 2 |
+| Q13 security baseline | Open | round 2 |
+| Q14 domain | Partly resolved (`antwater` prefix); buy timing open | below |
+| Q15 non-goals | Open | round 2 |
+| Q16 tracker and FOSS | Resolved 2026-11-22 | ADR-0005 |
+| Q17 ROG role | **Open** | below |
 
 ## Open questions
 
-### Q1. Toronto or Montreal?
+### Q1. Toronto or Montreal? — **resolved 2026-11-22**
 
-**Context:** The OCI home region is permanent. Both regions are in Canada and both have one availability domain. A1 capacity is the constraint, not feature parity.
+**Decision:** `ca-toronto-1`. See ADR-0006.
 
-**Options:** `ca-toronto-1` (lower latency if the operator and clients are in Ontario), `ca-montreal-1` (often better capacity).
+**Correction to the recommendation below:** "check A1 capacity in both regions, then fall back to Montreal" is not possible. Capacity cannot be measured before an account exists, the home region is fixed at signup, and a second account violates the one-account rule. The choice is a bet on Toronto, with an account upgrade as the only real capacity lever.
 
-**Recommendation:** Prefer Toronto for latency. At signup, check A1 capacity in both; if Toronto is exhausted, take Montreal. Do not create two accounts to get both.
+### Q1b. Do we upgrade the Oracle account to Pay As You Go?
 
-**Changes it:** A client requirement for Quebec data residency, or sustained capacity failures in one region.
+**Context:** Always Free capacity in Toronto is a lottery, and there is no second-account fallback. Upgrading to PAYG keeps Always Free resources free but makes provisioning far more likely to succeed. The cost is a card on file, which can be charged if anything outside Always Free is ever created.
+
+**Options:** upgrade at signup; stay free-only and retry for days; upgrade only if provisioning fails for 72 hours.
+
+**Recommendation:** upgrade immediately after the tenancy exists, with a budget alarm at $0 and a written rule that nothing outside Always Free is created. Capacity risk is the project's best-known failure mode; buying it out for a card on file is cheap.
+
+**Changes it:** Oracle starts charging for Always Free shapes, or the operator is unwilling to keep a card on file.
 
 ### Q2. Is Postgres in Docker the right Phase 1 database?
 
@@ -115,13 +151,13 @@ One Oracle Cloud Always Free `VM.Standard.A1.Flex` (2 OCPU / 12 GB) in Toronto o
 
 **Changes it:** A client requires dedicated infrastructure or a compliance boundary.
 
-### Q10. Public IP, Cloudflare proxy, or Tunnel?
+### Q10. Public IP, Cloudflare proxy, or Tunnel? — **resolved 2026-11-22**
 
-**Context:** Caddy needs ports 80/443. Cloudflare proxy hides the origin; a Tunnel removes the inbound ports entirely.
+**Decision:** Cloudflare proxied A record, Caddy serving a Cloudflare Origin Certificate, SSL mode Full (strict), UFW allowing 443 only from Cloudflare's published ranges, and Cloudflare Access on admin subdomains. See ADR-0012 for the full comparison and the trade-offs.
 
 **Options:** direct A record + Caddy; Cloudflare proxy + Caddy; Cloudflare Tunnel + Caddy.
 
-**Recommendation:** Cloudflare DNS + proxy in Phase 1. Keep the origin firewall closed to everything except Cloudflare ranges if practical. Evaluate Tunnel when the public IP becomes a nuisance or the host moves behind CGNAT.
+**Recommendation (superseded by ADR-0012):** Cloudflare DNS + proxy in Phase 1. Keep the origin firewall closed to everything except Cloudflare ranges if practical. Evaluate Tunnel when the public IP becomes a nuisance or the host moves behind CGNAT.
 
 **Changes it:** Cloudflare becomes unacceptable for a client, or Tunnel adds a failure mode you cannot monitor.
 
@@ -155,13 +191,11 @@ One Oracle Cloud Always Free `VM.Standard.A1.Flex` (2 OCPU / 12 GB) in Toronto o
 
 **Changes it:** A client requires an audit log, SSO, or a compliance certification.
 
-### Q14. What is the domain strategy?
+### Q14. What is the domain strategy? — **partly resolved 2026-11-22**
 
-**Context:** A domain is the only likely Phase 1 cost. Free subdomains exist but look unprofessional for client work.
+**Decision so far:** the prefix is **`antwater`**. Every hostname derives from it: `antwater.<zone>`, `status.antwater.<zone>`, `logs.antwater.<zone>`. Paying for a domain is deferred.
 
-**Options:** `*.duckdns.org` or similar; a cheap `.dev`/`.ca` domain; Cloudflare Registrar at cost.
-
-**Recommendation:** Use a free subdomain until the first client, then buy one domain at cost and put it on Cloudflare. Keep DNS TTL low during migrations.
+**Remaining:** when to buy the domain. Recommendation stands: use a free subdomain for Phase 0 drills, buy at the first real client — defined as the first time a person other than the operator is asked to visit the site.
 
 **Changes it:** A client insists on their own domain, which is normal; then the domain belongs to the client.
 

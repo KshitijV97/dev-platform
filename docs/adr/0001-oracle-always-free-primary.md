@@ -1,9 +1,9 @@
 # ADR-0001: Oracle Always Free A1 as the Phase 1 primary
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-22
 - **Deciders:** Kshitij
-- **Related:** `docs/architecture.md`, `docs/grill/brief.md`
+- **Related:** ADR-0006, `docs/architecture.md`, `docs/grill/brief.md`
 
 ## Context
 
@@ -21,7 +21,7 @@ Options considered:
 
 ## Decision
 
-Use one Oracle Cloud Infrastructure Always Free `VM.Standard.A1.Flex` instance with **2 OCPU / 12 GB RAM**, Ubuntu 24.04, in `ca-toronto-1` or `ca-montreal-1`, as the Phase 1 primary node.
+Use one Oracle Cloud Infrastructure Always Free `VM.Standard.A1.Flex` instance with **2 OCPU / 12 GB RAM**, Ubuntu 24.04, in **`ca-toronto-1`** (ADR-0006), as the Phase 1 primary node.
 
 The node runs Docker Compose only. It is treated as disposable: Terraform + cloud-init + Compose rebuild it, and all durable state is backed up off-box.
 

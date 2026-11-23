@@ -8,7 +8,7 @@ The single source of truth for terms used in this repo. If a plan or ADR conflic
 | **Execution plane** | Where code actually runs: containers, language servers, builds, databases, jobs. Runs on the Oracle node. | The developer's laptop. |
 | **State plane** | Durable data that must survive a node: Git history, database dumps, object storage, registry images. | Container volumes on a single host. |
 | **Primary node** | The one always-on Oracle A1 instance that hosts the Compose stack. | A "swarm" or cluster. |
-| **Worker** | An optional node that runs specific jobs (GPU, heavy builds). Not on the critical path. | The primary node. |
+| **Job worker** | The container that claims queued jobs and executes them. One process, one queue. | An optional worker, which is a machine. |
 | **Optional worker** | A machine that may accelerate work but whose absence must not break anything. Today: the ROG Strix G16. Holds no unique state and is never a required check. | A warm standby, which is expected to be able to take over. |
 | **Dev container** | A reproducible development environment defined by `devcontainer.json` and a Dockerfile. | A production container. |
 | **Golden path** | The documented, supported way to deploy and operate the platform. | Every possible configuration. |
@@ -32,5 +32,9 @@ The single source of truth for terms used in this repo. If a plan or ADR conflic
 | **Retro gate** | The check that an iteration has no open issues before `ce-retro` runs. `make iteration-check` fails while any remain. | The retro itself. |
 | **Carry-over** | An issue moved from one iteration to the next with a recorded reason. Bounded to two per iteration. | Reopening a closed iteration. |
 | **Escape hatch** | A documented, scripted, and drilled path from a proprietary tool to a FOSS one, with a bounded migration time. Required by ADR-0005, not optional. | A vague intention to migrate someday. |
+| **Portability exit** | A documented path that moves a workload to another provider or a managed service. FOSS is not the point; avoiding operational lock-in is. | An escape hatch, which is specifically about replacing proprietary software. |
+| **Client** | The engagement: a person or company that pays for work. | A client site. |
+| **Client site** | One deployment serving one domain: its own Compose project, database, database user, and subdomain. | The client. |
+| **Project slug** | The short name used in domains, Compose project names, image names, and directories. Current: `antwater`. | A client slug, which names one client site. |
 | **Client-ready** | Has backups, monitoring, a support boundary, and a documented handover. | Feature-complete. |
 | **Revenue-ready** | Has per-project cost tracking, an SLA, and a migration path. | Client-ready. |

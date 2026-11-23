@@ -23,7 +23,7 @@ flowchart TB
   subgraph Oracle["Execution plane — Oracle A1, Canada"]
     Caddy["Caddy<br/>TLS + reverse proxy"]
     App["App container<br/>:80 placeholder"]
-    Worker["Worker container"]
+    Worker["Job worker container"]
     PG[("Postgres 16")]
     Kuma["Uptime Kuma"]
     Dozzle["Dozzle"]
@@ -79,7 +79,7 @@ The dashed edge is deliberate. The ROG is an optional worker under ADR-0002: it 
 |---|---|---|---|
 | Caddy | `caddy:2-alpine` | 50–100 MB | TLS, reverse proxy, compression |
 | App | Built from app repo | 0.5–1.5 GB | Web service |
-| Worker | Same image, different command | 0.5–1 GB | Triggered and background jobs |
+| Job worker | Same image, different command | 0.5–1 GB | Triggered and background jobs |
 | Postgres | `postgres:16-alpine` | 1–2 GB | Primary database |
 | Uptime Kuma | `louislam/uptime-kuma:1` | 200–400 MB | Internal uptime dashboard |
 | Dozzle | `amir20/dozzle:v8` | 50–100 MB | Container log viewer |
@@ -112,7 +112,7 @@ The dependency-guard drill (iteration-02, issue R2) is what keeps this honest. S
 ### Dynamic web service
 
 1. Client resolves the domain through Cloudflare.
-2. Cloudflare proxies to the Oracle public IP (or a Tunnel).
+2. Cloudflare proxies to the Oracle public IP. The origin leg uses a Cloudflare Origin Certificate with SSL mode Full (strict), so there is no ACME renewal to fail (ADR-0012).
 3. Caddy terminates TLS and proxies to `app:80` (the scaffold uses an nginx placeholder; change the upstream when the real app listens on another port).
 4. The app reads/writes Postgres over the Compose network.
 5. Errors go to Sentry; logs stay in Docker and are visible in Dozzle.
@@ -233,7 +233,9 @@ Migration triggers:
 - Secrets live in `.env` with mode 600, owned by the deploy user.
 - Restic repositories are encrypted; keys are stored in the password manager.
 - Dozzle mounts the Docker socket read-only. Treat access to it as admin access.
-- Cloudflare proxy hides the origin IP; direct-to-IP access is blocked at the firewall if a Tunnel is used.
+- Cloudflare proxy hides the origin IP. UFW allows 443 only from Cloudflare's published ranges, refreshed quarterly.
+- Admin surfaces (`logs.<domain>`, Uptime Kuma) sit behind Cloudflare Access, not the public internet.
+- The origin serves a Cloudflare Origin Certificate, so there is no ACME renewal to fail and Full (strict) still validates (ADR-0012).
 - The optional worker joins as `tag:worker` with an ACL that blocks 22 and 5432 to the primary, and is revoked by removing it from the tailnet.
 
 ## Open questions
