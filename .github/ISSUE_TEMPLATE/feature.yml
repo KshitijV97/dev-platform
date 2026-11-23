@@ -3,6 +3,11 @@ description: A new capability or a meaningful improvement.
 title: "[feature] "
 labels: ["type:feature", "status:triage"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Assign this issue to the current `iteration-NN` milestone. An iteration cannot close while it has open issues.
+
   - type: textarea
     id: problem
     attributes:

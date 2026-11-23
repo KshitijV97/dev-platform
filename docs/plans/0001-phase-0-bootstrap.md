@@ -1,8 +1,10 @@
 # Plan 0001: Phase 0 bootstrap
 
-- **Status:** Draft — refine after `grill-with-docs`
+- **Status:** Draft — refine after the grilling session
 - **Date:** 2026-11-22
 - **Owner:** Kshitij
+- **Iteration:** `iteration-01: phase 0 bootstrap`
+- **Issues:** `docs/iterations/manifest.json` → `make seed-issues`
 - **Related:** `docs/architecture.md`, `docs/adr/`, `docs/grill/brief.md`
 
 ## Goal
@@ -26,6 +28,7 @@ In:
 Out:
 
 - Multiple clients, staging, GPU, Kubernetes, multi-region.
+- The ROG worker. It is `iteration-02`, is optional, and must not gate this plan.
 - A custom domain is optional; a free subdomain is acceptable for the drill.
 
 ## Assumptions
@@ -207,6 +210,7 @@ Out:
 ## Definition of done
 
 - All acceptance criteria pass.
+- `./scripts/iteration-status.sh --check "iteration-01: phase 0 bootstrap"` exits 0.
 - `docs/runbooks/rebuild.md` and `restore.md` contain measured times.
 - `docs/architecture.md` matches reality.
 - Open decisions in `docs/grill/brief.md` are resolved or explicitly deferred.

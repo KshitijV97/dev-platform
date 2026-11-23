@@ -39,6 +39,10 @@ flowchart TB
     Obj["OCI Object Storage<br/>backups"]
   end
 
+  subgraph Optional["Optional worker — ROG Strix, Toronto"]
+    Buildx["buildx remote builder<br/>cache only"]
+  end
+
   Editor -->|SSH over Tailscale| Oracle
   Browser --> CF
   CF --> Caddy
@@ -56,7 +60,10 @@ flowchart TB
   Cron -->|ping| HC
   App -->|errors| Sentry
   Oracle -->|nightly restic| Obj
+  Buildx -.->|optional build cache| Oracle
 ```
+
+The dashed edge is deliberate. The ROG is an optional worker under ADR-0002: it may speed builds up, and the platform must pass every drill with it switched off. It holds no unique state and is never a required check.
 
 ## Planes
 
@@ -82,6 +89,17 @@ flowchart TB
 Total steady-state: roughly 4–6 GB of 12 GB, leaving 6–8 GB for page cache and bursts. The 2 OCPU limit is the real constraint for compilation, which is why builds run in GitHub Actions.
 
 External services that are not on the Oracle node: GitHub Issues + Projects (triage), Cloudflare (DNS and Pages), Sentry (errors), Healthchecks.io (dead-man's switch), and Telegram (notifications).
+
+### Optional capacity
+
+The ROG Strix G16 may join the tailnet as `tag:worker` and serve as a `buildx` remote builder. It is capacity, not a component:
+
+- It holds no unique state and no database.
+- It is never a required check on a pull request.
+- It is fenced by a Tailscale ACL that blocks ports 22 and 5432 to the primary.
+- Removing it from the tailnet returns the platform to its pre-ROG state.
+
+The dependency-guard drill (iteration-02, issue R2) is what keeps this honest. See `docs/workers/rog-g16.md`.
 
 ## Request flow
 
@@ -149,8 +167,9 @@ Rules:
 4. Sentry creates or links an issue for a new error group with `source:sentry`.
 5. Uptime and cron alerts go to Telegram only. A persistent alert becomes a `type:ops` issue, so the tracker does not fill with transient noise.
 6. A PR body with `Closes #123` closes the issue on merge.
+7. Every issue belongs to one iteration milestone. The retro cannot close until the milestone is empty; `make iteration-check` enforces it.
 
-Labels, project fields, and the migration path are defined in `docs/integrations/issue-tracker.md`.
+Labels, project fields, the escape hatch, and the migration path are defined in `docs/integrations/issue-tracker.md`. The iteration model is in `docs/iterations/README.md`.
 
 ## Backup flow
 
@@ -183,6 +202,8 @@ The OCI home region is chosen at signup and cannot be changed. Decide before cre
 | Compromised host | Data/credential risk | Unexpected processes, alerts | Snapshot for forensics, rotate secrets, rebuild | 4 h |
 | Free-tier policy change | Cost or outage | Provider notice, billing | Migrate using the portability plan | 1 week |
 | Tracker outage | Notifications delayed; work continues | Missing Telegram message | Use email; retry; no data loss | 1 h |
+| Tracker forces a paid tier | Cost or forced move | Provider notice, billing | Run `make export`, import into GitLab Free | 1 week |
+| Optional worker disappears | Slower builds only | Remote builder unreachable | Build on CI; remove the node | 0 min |
 
 ## Portability
 
@@ -213,6 +234,7 @@ Migration triggers:
 - Restic repositories are encrypted; keys are stored in the password manager.
 - Dozzle mounts the Docker socket read-only. Treat access to it as admin access.
 - Cloudflare proxy hides the origin IP; direct-to-IP access is blocked at the firewall if a Tunnel is used.
+- The optional worker joins as `tag:worker` with an ACL that blocks 22 and 5432 to the primary, and is revoked by removing it from the tailnet.
 
 ## Open questions
 

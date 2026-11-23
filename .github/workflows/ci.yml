@@ -33,6 +33,12 @@ jobs:
       - name: Shellcheck
         run: shellcheck scripts/*.sh
 
+      - name: Validate iteration manifest
+        run: |
+          jq -e . docs/iterations/manifest.json >/dev/null
+          jq -r '.issues[] | .title' docs/iterations/manifest.json | sort | uniq -d | tee /tmp/dupes
+          test ! -s /tmp/dupes
+
       - name: Secret scan
         uses: gitleaks/gitleaks-action@v2
         env:

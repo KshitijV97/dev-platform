@@ -9,6 +9,7 @@ The single source of truth for terms used in this repo. If a plan or ADR conflic
 | **State plane** | Durable data that must survive a node: Git history, database dumps, object storage, registry images. | Container volumes on a single host. |
 | **Primary node** | The one always-on Oracle A1 instance that hosts the Compose stack. | A "swarm" or cluster. |
 | **Worker** | An optional node that runs specific jobs (GPU, heavy builds). Not on the critical path. | The primary node. |
+| **Optional worker** | A machine that may accelerate work but whose absence must not break anything. Today: the ROG Strix G16. Holds no unique state and is never a required check. | A warm standby, which is expected to be able to take over. |
 | **Dev container** | A reproducible development environment defined by `devcontainer.json` and a Dockerfile. | A production container. |
 | **Golden path** | The documented, supported way to deploy and operate the platform. | Every possible configuration. |
 | **Rebuild drill** | Destroying the primary node and recreating it from this repo and backups, timed. | A restart. |
@@ -27,5 +28,9 @@ The single source of truth for terms used in this repo. If a plan or ADR conflic
 | **Triage** | The recurring act of assigning type, priority, area, and client to a new issue. | Fixing the issue. |
 | **Intake** | The inbound surface where requests arrive: templates, email, Telegram, CI, Sentry. | The tracker itself. |
 | **Bridge** | A small service that translates webhooks or messages between systems, for example Telegram to a tracker. | A native integration. |
+| **Iteration** | One bounded window of work, represented by one GitHub milestone named `iteration-NN: <theme>`, ending in a retro. | A sprint of fixed calendar length; there is no fixed length here yet. |
+| **Retro gate** | The check that an iteration has no open issues before `ce-retro` runs. `make iteration-check` fails while any remain. | The retro itself. |
+| **Carry-over** | An issue moved from one iteration to the next with a recorded reason. Bounded to two per iteration. | Reopening a closed iteration. |
+| **Escape hatch** | A documented, scripted, and drilled path from a proprietary tool to a FOSS one, with a bounded migration time. Required by ADR-0005, not optional. | A vague intention to migrate someday. |
 | **Client-ready** | Has backups, monitoring, a support boundary, and a documented handover. | Feature-complete. |
 | **Revenue-ready** | Has per-project cost tracking, an SLA, and a migration path. | Client-ready. |

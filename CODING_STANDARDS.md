@@ -37,6 +37,7 @@ These rules apply to `infra/`, `compose/`, `scripts/`, and the docs that describ
 - `shellcheck` must pass.
 - Scripts must be idempotent or clearly state that they are not.
 - No `curl | bash` in a script that runs unattended, unless the URL is pinned and checksum-verified.
+- **Assume bash 3.2 on macOS.** `/usr/bin/env bash` on a developer Mac is 3.2, not 5.x. No `mapfile`, no `readarray`, no associative arrays, no `${var,,}`. Use `while IFS= read -r ... < <(...)` instead. CI runs bash 5, so a 3.2-only bug passes CI and fails locally.
 
 ## Documentation
 
@@ -64,4 +65,4 @@ These rules apply to `infra/`, `compose/`, `scripts/`, and the docs that describ
 make check
 ```
 
-This validates the Compose file, Terraform formatting, shell scripts, and secret scanning in CI.
+This validates the Compose file, Terraform formatting, shell scripts, the iteration manifest, and secret scanning in CI.

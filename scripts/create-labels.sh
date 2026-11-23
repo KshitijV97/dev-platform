@@ -14,6 +14,7 @@ labels=(
   "type:client|Client-requested work|5319e7"
   "type:ops|Infrastructure or reliability work|fbca04"
   "type:docs|Documentation|0075ca"
+  "type:decision|A design decision that closes with an ADR|d4c5f9"
   "priority:p0|Drop everything|b60205"
   "priority:p1|Do next|d93f0b"
   "priority:p2|Scheduled|fbca04"

@@ -8,7 +8,7 @@ Captured 2026-11-22. This is the brief the architecture and plan must satisfy.
 |---|---|
 | Primary machine | MacBook Air M1, 8 GB RAM, 256 GB disk |
 | Secondary machine | ASUS ROG Strix G16 (G614JVR), i9-14900HX, RTX 4070, in Toronto |
-| Access to secondary | **None** — it cannot be used as a worker |
+| Access to secondary | **Expected around 2026-12-06.** Optional worker only — never a dependency |
 | Location | Canada |
 | Budget | $0 for the first few months, then possibly a paid VPS or cloud |
 | Stage | Hobby → client work → revenue |
@@ -23,7 +23,9 @@ Captured 2026-11-22. This is the brief the architecture and plan must satisfy.
 5. Support a repeatable deploy from Git.
 6. Support backups and a tested restore.
 7. Provide one unified issue tracker for bugs, features, client requests, CI failures, and application errors.
-8. Allow a future move to a paid VPS, managed platform, or cloud without rewriting the app.
+8. Group work into iterations that end in a retro, with no issue left open by accident.
+9. Allow a future move to a paid VPS, managed platform, or cloud without rewriting the app.
+10. Allow any proprietary tool that starts charging to be replaced by a FOSS equivalent without losing work.
 
 ## Non-functional requirements
 
@@ -40,15 +42,18 @@ Captured 2026-11-22. This is the brief the architecture and plan must satisfy.
 | Portability | Container images run on ARM64 and AMD64 |
 | Observability | External uptime check + dead-man's switch for every job |
 | Issue tracking | REST API, Telegram, email, repository and CI links; free tier |
+| Iteration hygiene | Every issue in one milestone; ≤ 2 carry-overs per retro |
+| Vendor escape | Tracker export + import proven; tracker move ≤ 1 week |
 
 ## Constraints
 
 - No Kubernetes, Nomad, or free-tier swarm in Phase 1.
-- No Windows, dual-boot, or ROG dependency.
+- No dual boot. Windows plus WSL2 is acceptable for the optional worker.
+- No dependency on the ROG: it may not hold unique state, gate a merge, or sit on the critical path.
 - No Android emulators.
 - No paid service without an explicit budget.
 - Do not create multiple Oracle accounts to build a cluster; it violates the one-account-per-person rule.
-- FOSS is preferred, not absolute; the tracker exception is recorded in ADR-0005.
+- FOSS is preferred, not absolute. ADR-0005 requires a tested exit instead.
 
 ## Assumptions to validate
 
@@ -61,9 +66,9 @@ Captured 2026-11-22. This is the brief the architecture and plan must satisfy.
 ## Out of scope
 
 - High availability across regions.
-- GPU or machine-learning workloads.
+- GPU or machine-learning workloads as a required capability. The optional worker may run one.
 - A self-service platform for other developers.
-- Windows or macOS build agents.
+- macOS build agents.
 - Mobile app builds.
 
 ## Open questions

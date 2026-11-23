@@ -7,9 +7,10 @@ This repo is a design-first infrastructure project. Read the context before chan
 1. `GLOSSARY.md` — the vocabulary is normative.
 2. `docs/adr/` — decisions already made.
 3. `docs/plans/` — the plan you are executing, if any.
-4. `docs/architecture.md` — the current shape and failure modes.
-5. `docs/integrations/issue-tracker.md` — intake, labels, and alert routing.
-6. `docs/grill/brief.md` — unresolved questions. Do not silently decide these.
+4. `docs/iterations/` — the current iteration and its issue manifest.
+5. `docs/architecture.md` — the current shape and failure modes.
+6. `docs/integrations/issue-tracker.md` — intake, labels, and alert routing.
+7. `docs/grill/brief.md` — unresolved questions. Do not silently decide these.
 
 ## Rules
 
@@ -20,16 +21,18 @@ This repo is a design-first infrastructure project. Read the context before chan
 - **Default to Canada.** Use `ca-toronto-1` or `ca-montreal-1` unless an ADR says otherwise.
 - **Protect the $0 phase.** Do not add a paid service without an explicit budget, an ADR or issue, and a note in `STRATEGY.md`.
 - **No orchestration by default.** Kubernetes, Nomad, k3s, and "swarms" need an ADR proving the single-host Compose setup is insufficient.
-- **The ROG laptop is out of scope.** It is in Toronto and not accessible. Do not add it as a worker.
+- **The ROG laptop is an optional worker.** It may accelerate builds and jobs; it may never hold unique state, gate a merge, or sit on the critical path. See ADR-0002 and `docs/workers/rog-g16.md`.
 - **State needs backups.** Any new stateful service must land with a backup path and a restore step in `docs/runbooks/restore.md`.
 - **Multi-arch by default.** Build `linux/arm64` and `linux/amd64` images.
 - **Update the runbook in the same PR** that changes a deploy, backup, or restore procedure.
 - **Every non-trivial change has an issue.** Use the templates and the label set in `docs/integrations/issue-tracker.md`.
+- **Every issue belongs to one iteration milestone.** No issue in limbo, and no iteration closes with open issues except a bounded, documented carry-over. See `docs/iterations/README.md`.
+- **A proprietary tool needs a tested exit.** If you adopt one, the export or migration path must exist and run. ADR-0005 is the model.
 - **Run `make check` before declaring done.**
 
-## Working with grill-with-docs
+## Working with a grilling session
 
-`grill-with-docs` interviews the operator and writes ADRs and glossary entries. When it finishes, fold the settled decisions into the active plan or spec before ending the session. Do not leave decisions only in chat.
+A grilling session interviews the operator and writes ADRs and glossary entries. When it finishes, fold the settled decisions into the active plan or spec before ending the session. Do not leave decisions only in chat.
 
 ## Working with Compound Engineering
 

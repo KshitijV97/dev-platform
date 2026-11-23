@@ -25,7 +25,7 @@ The tracker is not a second copy of the code. It links to repositories and CI, a
 | Email notifications | Should |
 | Link to repositories | Must |
 | Link to CI/CD | Must |
-| FOSS | Preferred |
+| FOSS | Preferred. A proprietary tool is acceptable only if it has a tested escape to a FOSS one. |
 | Hosted now, self-host later | Should |
 
 ## Options
@@ -44,7 +44,7 @@ Checked November 2026. Limits change; verify before committing.
 
 ## Recommendation
 
-**Phase 0/1: GitHub Issues + Projects.** This is a deliberate, reversible exception to the FOSS preference.
+**Phase 0/1: GitHub Issues + Projects.** FOSS is a preference, not a constraint; the constraint is that a proprietary choice must be escapable.
 
 Why:
 
@@ -52,9 +52,35 @@ Why:
 - Unlimited issues, 2,000 private Actions minutes per month, and the best API surface (REST + GraphQL).
 - Telegram is a 30-line Action; email notifications and reply-by-email are built in.
 - One less account, one less integration, one less failure mode during the $0 phase.
-- The exit path is documented and testable.
+- The exit path is documented, scripted, and drilled — see below.
 
-The tradeoff is real: GitHub is proprietary. If FOSS is a hard constraint rather than a preference, choose **GitLab Free** instead. It is the only hosted option that natively covers issues, repositories, CI, REST, and Telegram. The cost is moving or mirroring the repo and accepting the 5-user / 400-CI-minute free tier.
+GitHub is still proprietary. The difference from a blind commitment is that leaving is a week of work with a known procedure, not a migration project. If that ever stops being true, the decision is void.
+
+**GitLab Free** is the default escape target: the only hosted option that natively covers issues, repositories, CI, REST, and Telegram.
+
+## Escape hatch
+
+This section is a requirement, not advice. ADR-0005 makes it binding.
+
+| Guarantee | How it is met | Where |
+|---|---|---|
+| Data is exportable | Dated JSON snapshot of issues, labels, milestones | `scripts/export-issues.sh`, `make export` |
+| The path is proven | One import into throwaway GitLab/Forgejo | iteration-01 issue X2 |
+| Numbers survive | `legacy-id: N` line added to the body on import | migration steps below |
+| Time is bounded | ≤ 1 week tracker-only, ≤ 1 month full platform | this table |
+| No provider-only data | Board fields are a view over labels and milestones | data model above |
+
+Triggers that start the exit without debate: a capability in use moves to paid, a free limit drops below usage, the smallest paid tier costs more than the work justifies, or account-level access is threatened.
+
+Honest limitation: the tracker is the cheap half. GitHub → GitLab for code and CI is the expensive half. That is why workflows use only first-party actions and images are referenced by SHA — the deploy path is `ssh` and `docker compose`, which is portable.
+
+## Iterations
+
+Every issue belongs to exactly one milestone, titled `iteration-NN: <theme>`. An iteration ends in a retro, and the retro does not close until the milestone is empty. Optional work lives in its own `optional: true` milestone so it can never block a retro.
+
+- Model and rules: `docs/iterations/README.md`
+- Seed issues: `docs/iterations/manifest.json` → `make seed-issues`
+- Gate: `make iteration-check`
 
 ## Topology
 
@@ -176,7 +202,9 @@ Do **not** open an issue for every alert. Route uptime and cron failures to Tele
 - [ ] Create a Telegram bot with `@BotFather`, add it to a private channel or group, and store `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` as Actions secrets.
 - [ ] Install the Sentry GitHub integration and scope it to the platform repos.
 - [ ] Protect `main`: require the `ci` check and one review for client repos.
-- [ ] Add a weekly 20-minute triage block.
+- [ ] Seed the iteration milestones with `make seed-issues`.
+- [ ] Run `make export` and import the snapshot into a throwaway GitLab project once.
+- [ ] Add a weekly 20-minute triage block and a retro at the end of every iteration.
 
 ## Security
 
@@ -188,15 +216,17 @@ Do **not** open an issue for every alert. Route uptime and cron failures to Tele
 
 ## Migration and exit
 
-To move to GitLab Free or Forgejo:
+The full procedure is in ADR-0005. In practice:
 
-1. Export issues with `GET /repos/{owner}/{repo}/issues?state=all&per_page=100`.
-2. Map labels and states to the target.
-3. Create issues through the target's REST API, preserving the original number in a `legacy-id` line in the body.
-4. Keep the old tracker read-only for one month.
-5. Update links in docs and PR templates.
+1. `./scripts/export-issues.sh` writes `exports/<timestamp>/{issues,labels,milestones}.json`.
+2. Map labels and states to the target: GitLab uses open/closed and scoped labels; Forgejo uses open/closed and its own label set.
+3. Create issues through the target's REST API, preserving the original number in a `legacy-id: N` line at the top of the body.
+4. Keep the old tracker read-only for one month, then archive it.
+5. Update links in docs, commit messages, and the PR template.
 
-Test the export on one repository before moving everything.
+Do this once for real before client work starts, not on the day the invoice arrives. Record the measured time; the target is one week for the tracker alone.
+
+Comments are not in the snapshot. Fetch them per issue with `gh api repos/{owner}/{repo}/issues/{n}/comments` when a migration needs the thread.
 
 ## Cost
 
@@ -204,7 +234,6 @@ $0 on GitHub Free. Telegram, Sentry Developer, and email notifications are free 
 
 ## Open questions
 
-- Is FOSS a hard constraint or a preference? If hard, switch to GitLab Free now.
 - One shared project or one project per client?
 - Should clients see a filtered view, or is a status page enough?
 - Is inbound email-to-issue worth a bridge?

@@ -1,0 +1,509 @@
+{
+  "$comment": "Source of truth for iterated work. ./scripts/seed-issues.sh creates milestones and issues from this file; it is idempotent on exact title. See docs/iterations/README.md.",
+  "milestones": [
+    {
+      "title": "iteration-00: settle decisions",
+      "description": "Resolve the open questions in docs/grill/brief.md before building. Done when every question is an ADR or an explicit deferral with a trigger."
+    },
+    {
+      "title": "iteration-01: phase 0 bootstrap",
+      "description": "Execute docs/plans/0001-phase-0-bootstrap.md. Done when one Oracle A1 node in Canada runs the Compose stack, the tracker is live, and a rebuild drill has passed."
+    },
+    {
+      "title": "iteration-02: optional ROG worker",
+      "description": "Onboard the ROG Strix G16 as an optional worker under the ADR-0002 contract. Optional: this milestone never gates a retro, and the platform must work with the machine switched off.",
+      "optional": true
+    }
+  ],
+  "issues": [
+    {
+      "key": "Q1",
+      "milestone": "iteration-00: settle decisions",
+      "title": "Q1: settle the Oracle home region (Toronto vs Montreal)",
+      "labels": ["type:decision", "area:infra", "priority:p1"],
+      "summary": "The OCI home region is permanent and Always Free compute must run there, so this is decided once at signup. Both Canadian regions have a single availability domain; A1 capacity is the real constraint, not features.",
+      "acceptance": [
+        "A1 capacity checked in ca-toronto-1 and ca-montreal-1 before creating the account",
+        "Home region chosen, recorded in the password manager, and not derived from a second account",
+        "ADR-0001 updated with the chosen region and its rationale",
+        "docs/grill/brief.md Q1 marked resolved"
+      ],
+      "source": "docs/grill/brief.md#q1-toronto-or-montreal"
+    },
+    {
+      "key": "Q2",
+      "milestone": "iteration-00: settle decisions",
+      "title": "Q2: confirm Postgres in Docker as the Phase 1 database",
+      "labels": ["type:decision", "area:infra", "priority:p1"],
+      "summary": "Postgres in a container with nightly dumps versus a managed free tier (Neon, Supabase) versus SQLite for small sites. A managed tier adds a network hop, cold starts, and a second vendor.",
+      "acceptance": [
+        "Database choice recorded as an ADR",
+        "RPO/RTO targets consistent with the backup policy in Q11",
+        "The trigger for moving to managed Postgres is written down"
+      ],
+      "source": "docs/grill/brief.md#q2-is-postgres-in-docker-the-right-phase-1-database"
+    },
+    {
+      "key": "Q3",
+      "milestone": "iteration-00: settle decisions",
+      "title": "Q3: choose what runs the scheduler",
+      "labels": ["type:decision", "area:infra", "priority:p1"],
+      "summary": "Host cron, Ofelia labels, an app-level scheduler, or GitHub Actions schedules. The deciding constraint is that every job must feed an external dead-man's switch.",
+      "acceptance": [
+        "Scheduler choice recorded in an ADR or in the plan",
+        "Every scheduled job has a spelled-out Healthchecks.io ping path",
+        "GitHub Actions is explicitly ruled in or out as a scheduler"
+      ],
+      "source": "docs/grill/brief.md#q3-what-runs-the-scheduler"
+    },
+    {
+      "key": "Q4",
+      "milestone": "iteration-00: settle decisions",
+      "title": "Q4: choose the queue for triggered jobs",
+      "labels": ["type:decision", "area:infra", "priority:p2"],
+      "summary": "A Postgres-backed queue (SKIP LOCKED, pg-boss, Procrastinate) versus Redis plus a worker library versus a cloud queue. Fewer stateful services keeps the backup story to one database.",
+      "acceptance": [
+        "Queue choice recorded, with the throughput ceiling that would force a change",
+        "Queue state included in the backup and restore drill",
+        "Failure and retry semantics documented"
+      ],
+      "source": "docs/grill/brief.md#q4-how-should-triggered-jobs-be-queued"
+    },
+    {
+      "key": "Q5",
+      "milestone": "iteration-00: settle decisions",
+      "title": "Q5: fix the observability stack",
+      "labels": ["type:decision", "area:infra", "priority:p1"],
+      "summary": "A light on-box stack (Dozzle, Uptime Kuma, Healthchecks.io, Sentry) versus a centralized free tier (Grafana Cloud). At least one check must live off the host that it monitors.",
+      "acceptance": [
+        "Logs, uptime, errors, and metrics each have exactly one named tool",
+        "Every public endpoint and every scheduled job has an external check",
+        "The trigger for moving to a centralized log store is written down",
+        "Alert routing matches docs/integrations/issue-tracker.md"
+      ],
+      "source": "docs/grill/brief.md#q5-what-is-the-observability-stack"
+    },
+    {
+      "key": "Q6",
+      "milestone": "iteration-00: settle decisions",
+      "title": "Q6: settle the deploy and rollback procedure",
+      "labels": ["type:decision", "area:infra", "priority:p1"],
+      "summary": "GitHub Actions over Tailscale into deploy.sh, Watchtower, a GitOps agent, or manual pulls. The important parts are immutable image tags by SHA, a kept previous tag, and migrations as a separate gated step.",
+      "acceptance": [
+        "Deploy path and rollback command recorded in docs/runbooks/",
+        "Images are referenced by commit SHA, not latest",
+        "Migrations run only after a backup and have a written reverse path",
+        "A rollback is rehearsed as part of iteration-01 task 11"
+      ],
+      "source": "docs/grill/brief.md#q6-how-do-deploys-and-rollbacks-work"
+    },
+    {
+      "key": "Q7",
+      "milestone": "iteration-00: settle decisions",
+      "title": "Q7: settle where secrets live",
+      "labels": ["type:decision", "area:infra", "priority:p1"],
+      "summary": "A mode-600 .env on the host plus GitHub Secrets, versus SOPS/age in the repo, versus a managed secret store. The migration trigger is a second operator or a client handover.",
+      "acceptance": [
+        "Secret locations documented, with who can read each one",
+        "Rotation procedure written for SSH keys, database password, Telegram token, and restic password",
+        "The trigger for moving to SOPS or a secret store is recorded"
+      ],
+      "source": "docs/grill/brief.md#q7-where-do-secrets-live"
+    },
+    {
+      "key": "Q8",
+      "milestone": "iteration-00: settle decisions",
+      "title": "Q8: decide whether Phase 1 has staging",
+      "labels": ["type:decision", "area:infra", "priority:p2"],
+      "summary": "12 GB does not comfortably hold two full stacks. The realistic options are local Compose, a second Compose project with its own database, or no staging at all.",
+      "acceptance": [
+        "Decision recorded with the memory budget that supports it",
+        "The condition that forces staging (first client review) is written down"
+      ],
+      "source": "docs/grill/brief.md#q8-is-there-a-staging-environment"
+    },
+    {
+      "key": "Q9",
+      "milestone": "iteration-00: settle decisions",
+      "title": "Q9: define client isolation",
+      "labels": ["type:decision", "area:infra", "priority:p2"],
+      "summary": "One Compose project per client with its own database and user, a shared app with tenant schemas, or one host per client. Requires deciding the maximum number of clients per host.",
+      "acceptance": [
+        "Isolation model recorded, including the shared components (Caddy, host)",
+        "Per-client naming convention for database, user, subdomain, and labels",
+        "A client-count ceiling per host is stated"
+      ],
+      "source": "docs/grill/brief.md#q9-how-are-clients-isolated"
+    },
+    {
+      "key": "Q10",
+      "milestone": "iteration-00: settle decisions",
+      "title": "Q10: choose the ingress path (A record, proxy, or Tunnel)",
+      "labels": ["type:decision", "area:infra", "priority:p2"],
+      "summary": "Direct A record with Caddy, Cloudflare proxy in front of Caddy, or Cloudflare Tunnel with no inbound ports. Each changes the firewall, the failure modes, and what is visible to the provider.",
+      "acceptance": [
+        "Ingress path recorded with the firewall rules it implies",
+        "Origin exposure and certificate handling documented",
+        "The condition that would move to Tunnel is written down"
+      ],
+      "source": "docs/grill/brief.md#q10-public-ip-cloudflare-proxy-or-tunnel"
+    },
+    {
+      "key": "Q11",
+      "milestone": "iteration-00: settle decisions",
+      "title": "Q11: approve the backup and restore policy",
+      "labels": ["type:decision", "area:infra", "priority:p1"],
+      "summary": "Nightly pg_dump plus restic, versus WAL archiving, versus managed PITR. Also fixes the retention set, the RPO/RTO claim, and the drill cadence.",
+      "acceptance": [
+        "Retention, RPO, RTO, and drill cadence agreed and written down",
+        "The claim is honest for the chosen method, not aspirational",
+        "docs/runbooks/restore.md reflects the agreed policy"
+      ],
+      "source": "docs/grill/brief.md#q11-what-is-the-backup-and-restore-policy"
+    },
+    {
+      "key": "Q12",
+      "milestone": "iteration-00: settle decisions",
+      "title": "Q12: define the triggers for moving off Oracle",
+      "labels": ["type:decision", "area:infra", "priority:p1"],
+      "summary": "Move when evidence says so, not on a fixed date. Candidate triggers include sustained CPU or memory pressure, a client SLA, a second stateful client database, egress above 1 TB per month, or repeated capacity and reclamation incidents.",
+      "acceptance": [
+        "Numeric triggers recorded in an ADR",
+        "A provider free-tier change is named as an immediate trigger",
+        "The default target (paid VPS with the same Compose file) is stated"
+      ],
+      "source": "docs/grill/brief.md#q12-what-triggers-the-move-off-oracle"
+    },
+    {
+      "key": "Q13",
+      "milestone": "iteration-00: settle decisions",
+      "title": "Q13: adopt the security baseline",
+      "labels": ["type:decision", "area:infra", "priority:p1"],
+      "summary": "UFW default deny, 80/443 only, SSH closed after Tailscale works, unattended upgrades, Cloudflare proxy in front, no root containers where avoidable, Sentry PII scrubbing.",
+      "acceptance": [
+        "Baseline written as a checklist in the runbooks",
+        "Port 22 closure is part of the rebuild runbook, not a manual afterthought",
+        "The compliance trigger for adding SSO or audit logs is recorded"
+      ],
+      "source": "docs/grill/brief.md#q13-what-is-the-security-baseline"
+    },
+    {
+      "key": "Q14",
+      "milestone": "iteration-00: settle decisions",
+      "title": "Q14: choose the domain strategy",
+      "labels": ["type:decision", "area:infra", "priority:p3"],
+      "summary": "A free subdomain, a cheap .dev or .ca domain at cost, or waiting until the first client. A domain is the only likely Phase 1 expense.",
+      "acceptance": [
+        "Decision recorded, including whether Phase 0 buys a domain",
+        "DNS TTL and migration practice documented"
+      ],
+      "source": "docs/grill/brief.md#q14-what-is-the-domain-strategy"
+    },
+    {
+      "key": "Q15",
+      "milestone": "iteration-00: settle decisions",
+      "title": "Q15: publish the explicit non-goals list",
+      "labels": ["type:decision", "area:docs", "priority:p2"],
+      "summary": "No Kubernetes, Nomad, k3s, multi-region, custom PaaS, GPU worker, Windows, Android emulator, or self-service portal. Revisiting any of these needs an ADR and a measured need.",
+      "acceptance": [
+        "Non-goals appear in README.md and docs/requirements.md",
+        "Each non-goal names the condition that would reopen it"
+      ],
+      "source": "docs/grill/brief.md#q15-what-is-explicitly-not-being-built"
+    },
+    {
+      "key": "Q17",
+      "milestone": "iteration-00: settle decisions",
+      "title": "Q17: decide what role, if any, the ROG plays",
+      "labels": ["type:decision", "area:infra", "priority:p2"],
+      "summary": "The ROG Strix G16 is expected to become reachable around 2026-12-06. ADR-0002 already limits it to an optional worker; the open part is which role, and on what runtime. Windows plus WSL2 is acceptable; dual boot is not.",
+      "acceptance": [
+        "Role chosen from the table in docs/workers/rog-g16.md, or the machine is left unused",
+        "Runtime decided: Windows plus WSL2, or a single-boot Linux install if it is ever promoted",
+        "Owner agreement on what may run and when is recorded",
+        "ADR-0002 confirmed or amended to match the choice"
+      ],
+      "source": "docs/workers/rog-g16.md#candidate-roles-in-order-of-value"
+    },
+    {
+      "key": "T1",
+      "milestone": "iteration-01: phase 0 bootstrap",
+      "title": "T1: create the Oracle tenancy and record its identifiers",
+      "labels": ["type:ops", "area:infra", "priority:p1"],
+      "summary": "Create exactly one Oracle account with the home region chosen in Q1, enable MFA, and record the tenancy and compartment OCIDs in the password manager.",
+      "acceptance": [
+        "Availability checked in ca-toronto-1 and ca-montreal-1 before signup",
+        "One account created with the chosen home region, MFA enabled",
+        "Tenancy OCID, compartment OCID, and region stored in the password manager",
+        "Always Free limits visible in the console"
+      ],
+      "source": "docs/plans/0001-phase-0-bootstrap.md#1-choose-the-region-and-create-the-tenancy"
+    },
+    {
+      "key": "T2",
+      "milestone": "iteration-01: phase 0 bootstrap",
+      "title": "T2: provision the A1 instance with Terraform",
+      "labels": ["type:ops", "area:infra", "priority:p1"],
+      "summary": "Apply infra/oracle: VCN, public subnet, internet gateway, route table, security list, and one VM.Standard.A1.Flex at 2 OCPU / 12 GB with a 100 GB boot volume and reserved public IP.",
+      "acceptance": [
+        "terraform apply completes in the chosen region",
+        "ssh works with the bootstrap key",
+        "nproc reports 2 and free -g reports about 12 GB",
+        "Public IP recorded and DNS plan noted"
+      ],
+      "source": "docs/plans/0001-phase-0-bootstrap.md#2-provision-the-instance"
+    },
+    {
+      "key": "T3",
+      "milestone": "iteration-01: phase 0 bootstrap",
+      "title": "T3: harden the host",
+      "labels": ["type:ops", "area:infra", "priority:p1"],
+      "summary": "Create the deploy user, disable password and root SSH, enable UFW with 22/80/443, install fail2ban, enable unattended upgrades, add 2 GB swap, and set the timezone to America/Toronto.",
+      "acceptance": [
+        "A second SSH session works as the deploy user",
+        "ufw status shows only the intended rules",
+        "Password authentication and root login are disabled",
+        "swapon --show reports 2 GB"
+      ],
+      "source": "docs/plans/0001-phase-0-bootstrap.md#3-harden-the-host"
+    },
+    {
+      "key": "T4",
+      "milestone": "iteration-01: phase 0 bootstrap",
+      "title": "T4: join Tailscale and close public SSH",
+      "labels": ["type:ops", "area:infra", "priority:p1"],
+      "summary": "Join the tailnet with a single-use tagged auth key, confirm MagicDNS, verify Tailscale SSH, then remove the public port 22 rule from the security list and UFW.",
+      "acceptance": [
+        "tailscale status shows the node online with MagicDNS resolving",
+        "ssh over Tailscale works after port 22 is closed publicly",
+        "External port 22 scan fails",
+        "Single-use auth key revoked"
+      ],
+      "source": "docs/plans/0001-phase-0-bootstrap.md#4-join-tailscale-and-close-public-ssh"
+    },
+    {
+      "key": "T5",
+      "milestone": "iteration-01: phase 0 bootstrap",
+      "title": "T5: install Docker and start the Compose stack",
+      "labels": ["type:ops", "area:infra", "priority:p1"],
+      "summary": "Install Docker Engine and the Compose plugin, clone the repo to /srv/dev-platform, create a mode-600 .env, and start compose/compose.yaml.",
+      "acceptance": [
+        "docker compose ps shows healthy services",
+        "curl -I http://localhost:80 returns 200 on the host",
+        "Postgres accepts connections on the Compose network",
+        ".env is mode 600 and gitignored"
+      ],
+      "source": "docs/plans/0001-phase-0-bootstrap.md#5-install-docker-and-the-stack"
+    },
+    {
+      "key": "T6",
+      "milestone": "iteration-01: phase 0 bootstrap",
+      "title": "T6: wire DNS, TLS, and the first public service",
+      "labels": ["type:ops", "area:infra", "priority:p1"],
+      "summary": "Point the chosen domain at the Oracle public IP through Cloudflare, set DOMAIN in .env, and confirm Caddy issues a valid certificate and redirects HTTP to HTTPS.",
+      "acceptance": [
+        "curl -I https://<domain> returns 200 with a valid certificate",
+        "HTTP redirects to HTTPS",
+        "SSL Labs grade A or better",
+        "status.<domain> and logs.<domain> have records if they are kept"
+      ],
+      "source": "docs/plans/0001-phase-0-bootstrap.md#6-dns-tls-and-the-first-service"
+    },
+    {
+      "key": "T7",
+      "milestone": "iteration-01: phase 0 bootstrap",
+      "title": "T7: ship one static site on Cloudflare Pages",
+      "labels": ["type:ops", "area:app", "priority:p2"],
+      "summary": "Create a Pages project, attach a domain, and prove both a deploy and a rollback without touching the Oracle node.",
+      "acceptance": [
+        "The site loads over HTTPS",
+        "A rollback to the previous deployment works",
+        "The site still loads with the Oracle node stopped"
+      ],
+      "source": "docs/plans/0001-phase-0-bootstrap.md#7-static-site"
+    },
+    {
+      "key": "T8",
+      "milestone": "iteration-01: phase 0 bootstrap",
+      "title": "T8: run one scheduled job behind a dead-man's switch",
+      "labels": ["type:ops", "area:infra", "priority:p2"],
+      "summary": "Add one scheduled job, make it do real work and ping Healthchecks.io on success, then stop it deliberately and confirm the alert arrives.",
+      "acceptance": [
+        "The job runs on schedule and writes visible output",
+        "Healthchecks.io reports the ping",
+        "Stopping the job produces an email alert within the grace period",
+        "Alert routing matches docs/integrations/issue-tracker.md"
+      ],
+      "source": "docs/plans/0001-phase-0-bootstrap.md#8-scheduled-job-and-dead-mans-switch"
+    },
+    {
+      "key": "T9",
+      "milestone": "iteration-01: phase 0 bootstrap",
+      "title": "T9: nightly encrypted backups to object storage",
+      "labels": ["type:ops", "area:infra", "priority:p1"],
+      "summary": "Create the OCI Object Storage bucket and S3-compatible key, configure restic, run scripts/backup.sh, schedule it nightly, and ping Healthchecks.io on success and failure.",
+      "acceptance": [
+        "A snapshot exists in object storage",
+        "restic check passes",
+        "The job is scheduled and pings on both outcomes",
+        "Retention matches the policy agreed in Q11"
+      ],
+      "source": "docs/plans/0001-phase-0-bootstrap.md#9-backups"
+    },
+    {
+      "key": "T10",
+      "milestone": "iteration-01: phase 0 bootstrap",
+      "title": "T10: pass the restore drill",
+      "labels": ["type:ops", "area:infra", "priority:p1"],
+      "summary": "Restore the latest dump into a scratch database, compare a row count and checksum with production, then run the real restore path and record the time.",
+      "acceptance": [
+        "Scratch restore completes and matches production on a row count and a checksum",
+        "scripts/restore.sh completes end to end",
+        "Time taken recorded in docs/runbooks/restore.md",
+        "Restore finishes in under 15 minutes"
+      ],
+      "source": "docs/plans/0001-phase-0-bootstrap.md#10-restore-drill"
+    },
+    {
+      "key": "T11",
+      "milestone": "iteration-01: phase 0 bootstrap",
+      "title": "T11: CI builds a multi-arch image and deploys over Tailscale",
+      "labels": ["type:ops", "area:infra", "priority:p2"],
+      "summary": "Add a workflow that builds linux/arm64 and linux/amd64, pushes to GHCR by commit SHA, and a deploy job that SSHes over Tailscale and runs scripts/deploy.sh.",
+      "acceptance": [
+        "A push to main produces a tagged multi-arch image",
+        "The deploy job runs deploy.sh on the node and passes the health check",
+        "Rolling back to the previous SHA takes one command",
+        "No long-lived SSH key is stored where a rotation cannot reach it"
+      ],
+      "source": "docs/plans/0001-phase-0-bootstrap.md#11-ci-and-deploy"
+    },
+    {
+      "key": "T12",
+      "milestone": "iteration-01: phase 0 bootstrap",
+      "title": "T12: external monitoring and alerting",
+      "labels": ["type:ops", "area:infra", "priority:p2"],
+      "summary": "Add an external uptime check, a TLS expiry check, a disk-space alert at 80%, a budget alert, and Sentry for application errors. Prove each one fires.",
+      "acceptance": [
+        "Each check fires in a deliberate test",
+        "Disk and budget alerts reach a channel that is read daily",
+        "Sentry is installed and scrubs PII",
+        "Monitor list documented in docs/architecture.md"
+      ],
+      "source": "docs/plans/0001-phase-0-bootstrap.md#12-monitoring-and-alerting"
+    },
+    {
+      "key": "T13",
+      "milestone": "iteration-01: phase 0 bootstrap",
+      "title": "T13: pass the rebuild drill",
+      "labels": ["type:ops", "area:infra", "priority:p1"],
+      "summary": "Destroy the instance while keeping a boot volume snapshot, rebuild from infra/oracle plus cloud-init plus Compose, restore the database, and confirm service.",
+      "acceptance": [
+        "End-to-end rebuild completes in under 30 minutes",
+        "The service is healthy afterwards and DNS is correct",
+        "Measured time recorded in docs/runbooks/rebuild.md",
+        "No manual step is missing from the runbook"
+      ],
+      "source": "docs/plans/0001-phase-0-bootstrap.md#13-rebuild-drill"
+    },
+    {
+      "key": "T14",
+      "milestone": "iteration-01: phase 0 bootstrap",
+      "title": "T14: make the issue tracker live end to end",
+      "labels": ["type:ops", "area:infra", "priority:p1"],
+      "summary": "Labels, templates, the project board, Telegram notifications, and Sentry plus CI intake all working, with one message per event.",
+      "acceptance": [
+        "Labels created and templates apply the right ones",
+        "A new issue produces exactly one Telegram message",
+        "A CI failure opens or comments on exactly one source:ci issue",
+        "A Sentry error creates or links one issue",
+        "Triage happens weekly against the Triage view"
+      ],
+      "source": "docs/plans/0001-phase-0-bootstrap.md#14-issue-tracker-and-alert-routing"
+    },
+    {
+      "key": "T15",
+      "milestone": "iteration-01: phase 0 bootstrap",
+      "title": "T15: decide the next phase",
+      "labels": ["type:decision", "area:infra", "priority:p2"],
+      "summary": "After 30 days of real use, review cost, capacity, and incidents, then decide whether to stay free, add a warm standby, or move to PAYG or a paid VPS.",
+      "acceptance": [
+        "30 days of capacity, cost, and incident data reviewed",
+        "Decision recorded as an ADR",
+        "STRATEGY.md phase table updated"
+      ],
+      "source": "docs/plans/0001-phase-0-bootstrap.md#15-decide-the-next-phase"
+    },
+    {
+      "key": "X1",
+      "milestone": "iteration-01: phase 0 bootstrap",
+      "title": "X1: create the GitHub Project board and its views",
+      "labels": ["type:ops", "area:infra", "priority:p2"],
+      "summary": "The gh token lacks the project scope, so this is a browser task. Create one Project over dev-platform with the Status, Priority, Source, Client, and Repo fields and the five saved views from the integration doc.",
+      "acceptance": [
+        "One Project exists and is linked to this repository",
+        "Fields match docs/integrations/issue-tracker.md",
+        "Five views exist: My queue, Triage, CI failures, Client work, Roadmap",
+        "New issues land in the project automatically"
+      ],
+      "source": "docs/integrations/issue-tracker.md#project-fields"
+    },
+    {
+      "key": "X2",
+      "milestone": "iteration-01: phase 0 bootstrap",
+      "title": "X2: prove the tracker escape hatch works",
+      "labels": ["type:ops", "area:infra", "priority:p1"],
+      "summary": "ADR-0005 makes the FOSS exit a hard requirement. Run scripts/export-issues.sh, import the export into a throwaway GitLab or Forgejo project, and confirm that titles, bodies, states, labels, milestones, and original issue numbers survive.",
+      "acceptance": [
+        "Export runs and produces issues, labels, and milestones JSON",
+        "A throwaway GitLab or Forgejo project imports every issue with its original number recorded in the body",
+        "Label and milestone mapping is documented, including the gaps",
+        "Time to complete a tracker-only migration is recorded in docs/integrations/issue-tracker.md"
+      ],
+      "source": "docs/adr/0005-issue-tracker.md#escape-hatch-is-a-hard-requirement"
+    },
+    {
+      "key": "R1",
+      "milestone": "iteration-02: optional ROG worker",
+      "title": "R1: onboard the ROG as a remote Docker builder",
+      "labels": ["type:ops", "area:infra", "priority:p3"],
+      "summary": "When the machine is reachable, join it to the tailnet as tag:worker, run buildkitd inside WSL2, and register it with docker buildx. No unique state, no inbound ports, no place on the merge path.",
+      "acceptance": [
+        "Tailscale ACL blocks 22 and 5432 from the worker to the primary",
+        "Buildkit is reachable over Tailscale as a remote builder",
+        "One representative multi-arch build measured with and without it",
+        "The role is kept only if the time saving is real",
+        "docs/architecture.md shows it as a dashed optional node"
+      ],
+      "source": "docs/workers/rog-g16.md#onboarding-checklist"
+    },
+    {
+      "key": "R2",
+      "milestone": "iteration-02: optional ROG worker",
+      "title": "R2: prove the platform has no dependency on the ROG",
+      "labels": ["type:ops", "area:infra", "priority:p2"],
+      "summary": "The ADR-0002 contract is only real if it is tested. With the ROG powered off or removed from the tailnet, the platform must still build, deploy, run jobs, and back up.",
+      "acceptance": [
+        "make check passes with the ROG off",
+        "A deploy from a clean clone succeeds with the ROG off",
+        "One scheduled job and one backup run succeed with the ROG off",
+        "Any step that failed has been fixed, not waived",
+        "Result recorded in the issue and linked from ADR-0002"
+      ],
+      "source": "docs/workers/rog-g16.md#dependency-guard-drill"
+    },
+    {
+      "key": "R3",
+      "milestone": "iteration-02: optional ROG worker",
+      "title": "R3: decide whether the ROG ever becomes a second Compose host",
+      "labels": ["type:decision", "area:infra", "priority:p3"],
+      "summary": "Promoting the ROG to a host would add client-isolation or warm-standby capacity at $0, but it can disappear without notice. That trade needs an ADR before any state lands on it.",
+      "acceptance": [
+        "Decision recorded as an ADR, including the state it would hold",
+        "If promoted: a backup and restore path exists for that state",
+        "If rejected: the condition that would reopen it is written down"
+      ],
+      "source": "docs/workers/rog-g16.md#what-would-promote-it-to-required"
+    }
+  ]
+}

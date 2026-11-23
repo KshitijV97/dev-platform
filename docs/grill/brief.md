@@ -1,6 +1,6 @@
 # Grilling brief
 
-Use this with `grill-with-docs`. It is the list of things the current design has **not** settled. Each question includes the context, the realistic options, a recommendation, and what would change it.
+Use this with a grilling session. It is the list of things the current design has **not** settled. Each question includes the context, the realistic options, a recommendation, and what would change it.
 
 Do not treat the recommendation as a decision. A decision becomes real when it is written into `docs/adr/` and the glossary or plan is updated.
 
@@ -11,9 +11,10 @@ One Oracle Cloud Always Free `VM.Standard.A1.Flex` (2 OCPU / 12 GB) in Toronto o
 ## Settled decisions
 
 - ADR-0001: Oracle Always Free is the Phase 1 primary.
-- ADR-0002: the ROG laptop is out of scope.
+- ADR-0002: the ROG laptop is an optional worker, never a dependency (revised 2026-11-22; it becomes reachable around 2026-12-06).
 - ADR-0003: static sites go to Cloudflare Pages.
 - ADR-0004: single-host Docker Compose, no orchestration.
+- ADR-0005: GitHub Issues + Projects is the tracker; FOSS is a preference and the escape hatch is mandatory.
 
 ## Open questions
 
@@ -168,29 +169,40 @@ One Oracle Cloud Always Free `VM.Standard.A1.Flex` (2 OCPU / 12 GB) in Toronto o
 
 **Context:** The fastest way to fail is to build a platform instead of a product.
 
-**Recommendation:** No Kubernetes, no Nomad, no k3s, no multi-region, no custom PaaS, no GPU worker, no Windows, no Android emulator, no self-service portal. Revisit only with an ADR and a measured need.
+**Recommendation:** No Kubernetes, no Nomad, no k3s, no multi-region, no custom PaaS, no GPU worker on the critical path, no dual boot, no Android emulator, no self-service portal, no self-hosted tracker while the hosted tier is free. Revisit only with an ADR and a measured need.
 
 **Changes it:** Five or more always-on nodes, or a workload that Compose genuinely cannot run.
 
-### Q16. Which issue tracker, and is FOSS a hard constraint?
+### Q16. Which issue tracker, and is FOSS a hard constraint? — **resolved 2026-11-22**
 
-**Context:** The tracker must have a generous free tier, a good REST API, Telegram, email, repository links, and CI/CD links. The operator prefers FOSS but is willing to use a hosted service for now.
+**Decision:** FOSS is a **preference, not a hard constraint**. The hard constraint is the inverse: a proprietary tool must be escapable to a FOSS one without losing work. Recorded in ADR-0005 (Accepted).
+
+GitHub Issues + Projects is the Phase 0/1 tracker. The escape hatch is a requirement, not an aspiration: `make export` snapshots issues, labels, and milestones; one import into a throwaway GitLab or Forgejo project is a Phase 0 acceptance item (iteration-01, issue X2); a tracker-only move must take ≤ 1 week.
+
+If a capability in use moves behind a paid tier, the exit starts immediately, with no further debate.
+
+The options table above is kept for the next time this is revisited.
+
+### Q17. What role does the ROG play? — **open**
+
+**Context:** The ASUS ROG Strix G16 is expected to become reachable around 2026-12-06, about two weeks out. It is Windows 11 with an i9-14900HX and an RTX 4070 Laptop. ADR-0002 already limits it to an optional worker: no unique state, no critical path, no inbound exposure, revocable in one action.
+
+The open part is which role, if any, and on what runtime.
 
 **Options:**
 
-| Option | Fit | Tradeoff |
+| Role | Value | Risk |
 |---|---|---|
-| GitHub Issues + Projects | Best native repo/CI integration; unlimited issues; REST + GraphQL | Proprietary |
-| GitLab Free | FOSS-open-core; native Telegram, REST, repos, CI | 5 users, 400 CI min; move or mirror the repo |
-| Plane Cloud | AGPL; 12 users; REST + webhooks | GitHub/GitLab/Sentry integrations are paid; Telegram needs a bridge |
-| Huly Cloud | EPL; unlimited users, 10 GB; native Telegram and GitHub sync | API is SDK-first, not REST-first; heavy self-host |
-| YouTrack Free | 10 users, 30 GB; excellent REST; GitHub/GitLab | Proprietary |
+| Remote Docker builder (`buildx` + `buildkitd`) | Real build speedup, no state | Low |
+| GPU batch workload | Only with a real workload | Medium |
+| Second Compose host for a client | Isolation without a VPS | High: it can vanish |
+| Primary CI runner | Saves Actions minutes | High: merge path on a laptop |
 
-**Recommendation:** GitHub Issues + Projects for Phase 0/1, as a deliberate, reversible exception to the FOSS preference. The code, PRs, checks, Dependabot, and Sentry already live on GitHub; a separate tracker adds a second platform and a sync problem during the $0 phase.
+**Recommendation:** Onboard it as a remote builder only, inside WSL2, joined to the tailnet as `tag:worker`. Do not promote it to a host without an ADR and a backup path for any state it would hold. Never make it a required check.
 
-If FOSS is a hard constraint, choose **GitLab Free** now. It is the only hosted option that natively covers issues, repos, CI, REST, and Telegram.
+**Changes it:** A client workload that needs the GPU or more than 2 OCPU sustained, or a second client database that no longer fits the primary.
 
-**Changes it:** FOSS becomes non-negotiable; a client needs a branded portal or guest access; GitHub changes its free-tier terms; CI outgrows the included minutes.
+**Definition of done:** the role is chosen, the runtime is chosen (WSL2, or single-boot Linux if it is ever promoted — never dual boot), the owner's agreement is recorded, and the dependency-guard drill passes with the machine switched off.
 
 ## Assumptions to test during Phase 0
 
@@ -204,6 +216,7 @@ If FOSS is a hard constraint, choose **GitLab Free** now. It is the only hosted 
 ## What "done" looks like for the grilling
 
 - Every question above is either decided (ADR) or explicitly deferred with a trigger.
+- Each open question is tracked as an issue in the `iteration-00: settle decisions` milestone, so none can be quietly forgotten.
 - `GLOSSARY.md` contains any new terms the discussion introduced.
 - `docs/plans/0001-phase-0-bootstrap.md` reflects the settled decisions.
 - No decision lives only in chat.

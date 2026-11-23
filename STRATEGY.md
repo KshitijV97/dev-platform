@@ -26,10 +26,19 @@ This project separates the durable parts of the workflow from the disposable par
 5. **Observability is part of the product.** If a job fails silently, the platform is not working.
 6. **No surprise bills.** Every paid service needs an explicit budget and an owner.
 7. **One queue.** Every non-trivial change has an issue, and every issue has a label that says what it is.
+8. **Proprietary is fine, locked-in is not.** Any tool that can start charging must have a documented, scripted, and drilled exit to a FOSS alternative.
+
+## Iterations
+
+Work is organised as iterations, not as an open backlog. Each iteration is a GitHub milestone (`iteration-NN: <theme>`) and ends in a retro. The retro does not close while the milestone has open issues, except at most two with a written carry-over reason. See `docs/iterations/README.md`.
+
+The point is honesty: work either finishes or is explicitly abandoned. Optional capacity gets its own `optional: true` milestone so it can never stall the platform.
 
 ## Phases
 
 ### Phase 0 — Bootstrap (weeks 1–2)
+
+Tracked as `iteration-01: phase 0 bootstrap`. Design questions are `iteration-00: settle decisions`.
 
 Goal: one Oracle A1 instance running the Compose stack, reachable over Tailscale, with TLS, backups, and external monitoring.
 
@@ -88,6 +97,8 @@ Exit criteria:
 | Interactive latency from Canada | < 60 ms | < 60 ms |
 | Silent job failures | 0 | 0 |
 | Triage time for a new issue | < 1 day | < 4 hours |
+| Issues still open at a retro | ≤ 2 carry-overs | 0 |
+| Time to leave a paid tracker | 1 week | 1 week |
 
 ## Constraints
 
@@ -98,14 +109,16 @@ Exit criteria:
 - No Android emulators.
 - Free logging and alerting preferred.
 - One developer, part-time operations.
+- A second machine (ROG Strix G16) may join as an optional worker, never as a dependency.
 
 ## Non-goals
 
 - Multi-region or high availability.
 - A free-tier "swarm".
-- GPU workloads.
-- Windows or dual-boot.
+- GPU workloads as a required capability. The ROG may run one as optional work.
+- Windows or dual boot as a platform requirement. Windows plus WSL2 is acceptable for the optional worker.
 - A custom PaaS or Kubernetes distribution.
+- Self-hosting the issue tracker while the hosted tier is free.
 
 ## Risks
 
@@ -118,6 +131,9 @@ Exit criteria:
 | Client data loss | Reputation | Nightly dumps; monthly restore test; off-box storage |
 | Scope creep into platform engineering | No product work | ADR required for orchestration; Compose until 5+ nodes |
 | The issue tracker becomes a second backlog | Lost work | One queue, weekly triage, close or schedule every issue |
+| The tracker starts charging for something in use | Cost or forced move | `make export` and the GitLab Free procedure in ADR-0005; triggered immediately |
+| The ROG arrives and quietly becomes a dependency | Outage when it leaves | Optional-worker contract; ACL; dependency-guard drill with it switched off |
+| Retro becomes theatre | Unclosed work hides | `make iteration-check` gates the retro; carry-over capped at two per iteration |
 
 ## Open decisions
 

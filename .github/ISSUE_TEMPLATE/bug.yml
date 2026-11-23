@@ -7,6 +7,8 @@ body:
     attributes:
       value: |
         Do not paste secrets, tokens, customer data, or personal data. Use the password manager for sensitive context.
+
+        Assign this issue to the current `iteration-NN` milestone. An iteration cannot close while it has open issues.
   - type: textarea
     id: expected
     attributes:

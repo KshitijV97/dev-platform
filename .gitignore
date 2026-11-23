@@ -24,6 +24,9 @@ backups/
 *.sql.gz
 *.dump
 
+# Tracker exports (contain issue bodies; back them up, do not commit them)
+exports/
+
 # OS / editor
 .DS_Store
 Thumbs.db

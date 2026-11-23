@@ -3,6 +3,10 @@ description: Infrastructure, deployment, backup, or reliability work.
 title: "[ops] "
 labels: ["type:ops", "status:triage", "area:infra"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Assign this issue to the current `iteration-NN` milestone. An iteration cannot close while it has open issues.
   - type: textarea
     id: goal
     attributes:

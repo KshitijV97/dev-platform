@@ -3,6 +3,10 @@ description: Work requested by a client. Keep scope and acceptance explicit.
 title: "[client] "
 labels: ["type:client", "status:triage"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Assign this issue to the current `iteration-NN` milestone. An iteration cannot close while it has open issues.
   - type: input
     id: client
     attributes:
