@@ -10,6 +10,13 @@
 *.tfplan
 crash.log
 crash.*.log
+# Real variable files carry the SSH public key, your home CIDR, and the
+# Tailscale auth key. Only the example may be committed.
+*.tfvars
+*.tfvars.json
+*.auto.tfvars
+!*.tfvars.example
+!*.tfvars.json.example
 
 # Secrets and keys
 *.pem
