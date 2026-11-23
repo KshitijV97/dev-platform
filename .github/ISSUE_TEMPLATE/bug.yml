@@ -1,0 +1,57 @@
+name: Bug
+description: Something is broken or behaving unexpectedly.
+title: "[bug] "
+labels: ["type:bug", "status:triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not paste secrets, tokens, customer data, or personal data. Use the password manager for sensitive context.
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What happened instead? Include the error message if there is one.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Where did this happen?
+      placeholder: "Production / staging / local; commit SHA; browser or client"
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Logs, screenshots, or links
+      description: Redact secrets before pasting.
+      render: shell
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impact
+      options:
+        - Single user, workaround exists
+        - Single user, blocked
+        - Multiple users, workaround exists
+        - Multiple users, blocked
+        - Data loss or security
+    validations:
+      required: true

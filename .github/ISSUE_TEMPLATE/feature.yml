@@ -1,0 +1,44 @@
+name: Feature
+description: A new capability or a meaningful improvement.
+title: "[feature] "
+labels: ["type:feature", "status:triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is hard, slow, or impossible today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Describe the smallest version that solves the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What else could solve this, and why is it worse?
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Phase
+      options:
+        - Hobby
+        - Client
+        - Revenue
+        - Not sure
+    validations:
+      required: true
+  - type: checkboxes
+    id: cost
+    attributes:
+      label: Cost check
+      options:
+        - label: This can be built without adding a paid service.
+          required: false
+        - label: This needs an ADR or budget note because it adds a paid service.
+          required: false

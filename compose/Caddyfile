@@ -1,0 +1,18 @@
+{$DOMAIN} {
+	encode zstd gzip
+
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+
+	reverse_proxy app:80
+}
+
+status.{$DOMAIN} {
+	reverse_proxy uptime-kuma:3001
+}
+
+logs.{$DOMAIN} {
+	reverse_proxy dozzle:8080
+}

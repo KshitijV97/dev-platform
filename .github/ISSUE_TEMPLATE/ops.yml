@@ -1,0 +1,43 @@
+name: Ops task
+description: Infrastructure, deployment, backup, or reliability work.
+title: "[ops] "
+labels: ["type:ops", "status:triage", "area:infra"]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What should be true when this is done?
+    validations:
+      required: true
+  - type: textarea
+    id: risk
+    attributes:
+      label: Risk
+      description: What can break, and who is affected?
+    validations:
+      required: true
+  - type: textarea
+    id: rollback
+    attributes:
+      label: Rollback
+      description: How do we return to the current state?
+    validations:
+      required: true
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification
+      description: Commands or checks that prove it worked.
+    validations:
+      required: true
+  - type: dropdown
+    id: window
+    attributes:
+      label: Preferred window
+      options:
+        - No downtime needed
+        - Brief downtime acceptable
+        - Maintenance window required
+    validations:
+      required: true

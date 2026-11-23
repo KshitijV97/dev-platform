@@ -1,0 +1,89 @@
+name: dev-platform
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-restart: &default-restart
+  restart: unless-stopped
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    <<: *default-restart
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+      TZ: ${TZ:-UTC}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      app:
+        condition: service_started
+    logging: *default-logging
+
+  # Placeholder image. Replace APP_IMAGE with the real service and update
+  # Caddyfile if the container listens on a port other than 80.
+  app:
+    image: ${APP_IMAGE:-nginx:alpine}
+    <<: *default-restart
+    env_file:
+      - path: ../.env
+        required: false
+    environment:
+      TZ: ${TZ:-UTC}
+      DATABASE_URL: postgres://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-app}@postgres:5432/${POSTGRES_DB:-app}
+    expose:
+      - "80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    logging: *default-logging
+
+  postgres:
+    image: postgres:16-alpine
+    <<: *default-restart
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-app}
+      POSTGRES_DB: ${POSTGRES_DB:-app}
+      TZ: ${TZ:-UTC}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    logging: *default-logging
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    <<: *default-restart
+    volumes:
+      - uptime_kuma_data:/app/data
+    expose:
+      - "3001"
+    logging: *default-logging
+
+  dozzle:
+    image: amir20/dozzle:v8
+    <<: *default-restart
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    expose:
+      - "8080"
+    logging: *default-logging
+
+volumes:
+  caddy_data:
+  caddy_config:
+  postgres_data:
+  uptime_kuma_data:

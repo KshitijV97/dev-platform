@@ -1,0 +1,38 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+
+packages:
+  - ca-certificates
+  - curl
+  - docker-compose-v2
+  - docker.io
+  - fail2ban
+  - git
+  - jq
+  - ufw
+  - unattended-upgrades
+
+users:
+  - default
+  - name: ${deploy_user}
+    groups: [sudo, docker]
+    shell: /bin/bash
+    sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+    ssh_authorized_keys:
+      - ${ssh_public_key}
+
+runcmd:
+  - [systemctl, enable, --now, docker]
+  - [sh, -c, "usermod -aG docker ${deploy_user}"]
+  - [sh, -c, "ufw default deny incoming"]
+  - [sh, -c, "ufw default allow outgoing"]
+  - [sh, -c, "ufw allow 22/tcp"]
+  - [sh, -c, "ufw allow 80/tcp"]
+  - [sh, -c, "ufw allow 443/tcp"]
+  - [sh, -c, "ufw --force enable"]
+  - [systemctl, enable, --now, fail2ban]
+  - [systemctl, enable, --now, unattended-upgrades]
+  # Tailscale's official installer. Use a single-use, pre-authorized key.
+  - [sh, -c, "curl -fsSL https://tailscale.com/install.sh | sh"]
+  - [sh, -c, "if [ -n '${tailscale_auth_key}' ]; then tailscale up --authkey='${tailscale_auth_key}' --ssh --hostname='${instance_name}'; fi"]
