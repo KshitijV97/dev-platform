@@ -67,6 +67,7 @@ flowchart LR
 - `make export` → snapshot the tracker for the FOSS exit.
 - `make check` → validate Compose, Terraform formatting, shell scripts, and the iteration manifest.
 - `make up` / `make down` / `make logs` → run the local stack (requires `.env`).
+- `docs/runbooks/publish.md` → what to scrub and which GitHub settings to enable before publishing.
 
 ## Issue tracking and iterations
 
@@ -85,3 +86,22 @@ FOSS is a **preference**, not a constraint. The constraint is that a proprietary
 - Dual boot. Windows plus WSL2 is acceptable for the optional worker.
 - Android emulators.
 - Multi-region or high availability.
+
+## This repository is public
+
+It is a reference design, published deliberately. Two consequences:
+
+**Client work does not live here.** Client sites, their bugs, their invoices, and their data belong in private repositories. Never paste a log, a token, a customer name, or a screenshot containing personal data into an issue here.
+
+**Issues are world-readable.** That is fine for design decisions and platform bugs, which is what this repository tracks. See `docs/runbooks/publish.md` for what may and may not be published.
+
+## Licence
+
+Split by content, because code and prose want different terms:
+
+| Scope | Licence |
+|---|---|
+| `scripts/`, `infra/`, `compose/`, `.github/` | **MIT** — see [`LICENSE`](LICENSE) |
+| `README.md`, `STRATEGY.md`, `GLOSSARY.md`, and `docs/` | **CC BY 4.0** — see [`LICENSE-docs`](LICENSE-docs) |
+
+Read it, fork it, learn from it. Attribution is required for the docs.

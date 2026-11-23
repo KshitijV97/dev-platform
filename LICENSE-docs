@@ -1,0 +1,22 @@
+Documentation licence
+=====================
+
+The prose in this repository is licensed under the Creative Commons
+Attribution 4.0 International licence (CC BY 4.0).
+
+Covered: README.md, STRATEGY.md, GLOSSARY.md, CODING_STANDARDS.md, REVIEW.md,
+AGENTS.md, CLAUDE.md, SECURITY.md, LICENSE-docs, and everything under docs/.
+
+You are free to share and adapt this material for any purpose, including
+commercially, provided you give appropriate credit, link to the licence, and
+indicate whether changes were made.
+
+Full legal code: https://creativecommons.org/licenses/by/4.0/legalcode
+
+Attribution example:
+
+    Adapted from "dev-platform" by Kshitij (https://github.com/KshitijV97),
+    licensed under CC BY 4.0.
+
+Not covered: everything under scripts/, infra/, compose/, .github/, and any
+other source code. Those are licensed under the MIT licence in LICENSE.
