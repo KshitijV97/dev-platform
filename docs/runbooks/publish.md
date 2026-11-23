@@ -1,5 +1,7 @@
 # Publish runbook: taking this repo public
 
+**Applied 2026-11-23.** The repository is public. The settings below were enabled on the day of the flip; the scrub decisions were taken deliberately and are recorded at the end.
+
 **Publishing is effectively irreversible.** Forks, crawlers, and archive services copy a public repository within minutes. Scrubbing after the flip does not undo it: rewriting history leaves the old objects in any fork that already exists, and those are not yours to delete.
 
 So: everything in "Before you flip" happens **before** the visibility change, and nothing is left to "we'll fix it after launch".
@@ -116,3 +118,18 @@ Public repositories also get **unlimited GitHub Actions minutes**, which quietly
 - Before the first client: re-run this checklist and confirm client work lives in a private repository.
 - Quarterly: review secret-scanning alerts and the fork network.
 - After any incident: assume anything published is known to the attacker.
+
+## Decision log for the 2026-11-23 flip
+
+**Enabled at flip:** secret scanning, push protection, Dependabot alerts, Dependabot security updates, private vulnerability reporting, CodeQL default setup (Actions), workflow default permissions read-only, fork pull-request approval required.
+
+**Cleared before the flip:** full-history `gitleaks` scan over 4 commits, 227 KB — no leaks. `.terraform.tfvars` added to `.gitignore` (it was untracked but not ignored, and it carries the SSH key, home CIDR, and Tailscale auth key).
+
+**Deliberately published, not scrubbed:**
+
+- The brand prefix `antwater`. It is a naming decision, not an advantage, and scrubbing it would make the ADRs vague for no reduction in risk.
+- The optional worker's hardware, city, and availability date. The machine has no inbound exposure and joins a private tailnet; the date is an operational detail, not a secret. Remove it before that machine holds anything a client cares about.
+- The operator's name and the phase plan.
+
+**Deferred:** no client work in this repository. See `README.md`.
+
